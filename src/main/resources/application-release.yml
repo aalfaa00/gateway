@@ -1,0 +1,132 @@
+#NOTE: these configs apply only to local dev environment
+server:
+  port: 8000
+
+#  Spring configs
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 60s
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: userLogin
+          uri: lb://users
+          predicates:
+            - Method=POST
+            - Path=/login
+
+        - id: userRefreshToken
+          uri: lb://users
+          predicates:
+            - Method=POST
+            - Path=/refresh_token
+          filters:
+            - RewritePath=/refresh_token, /users/refresh_token
+
+        - id: userRegister
+          uri: lb://users
+          predicates:
+            - Method=POST
+            - Path=/register
+          filters:
+            - RewritePath=/register, /users/register
+
+        - id: userLogout
+          uri: lb://users
+          predicates:
+            - Method=POST
+            - Path=/logout
+          filters:
+            - RewritePath=/logout, /users/logout
+            - RemoveRequestHeader=Cookie
+            - AuthorizationHeaderFilter
+
+        - id: company
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/company/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - AuthorizationHeaderFilter
+
+        - id: employeeCompleteRegister
+          uri: lb://users
+          predicates:
+            - Method=POST
+            - Path=/employee/register/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: verification
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/verify/email
+          filters:
+            - RemoveRequestHeader=Cookie
+            - AuthorizationHeaderFilter
+
+        - id: verification
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/verify/email/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: verification
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/verify/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - AuthorizationHeaderFilter
+
+        - id: verification
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/password/reset/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: verification
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/password/request
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/password/request, /users/password/request
+
+        - id: users
+          uri: lb://users
+          predicates:
+            - Method=GET, POST, DELETE, PUT
+            - Path=/users/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - AuthorizationHeaderFilter
+
+#  Eureka configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://192.168.49.2:31162/eureka
+  instance:
+    instance-id: ${spring.application.name}:${vcap.application.instance_id:${spring.application.instance_id:${random.value}}}
+    status-page-url-path: /actuator/health
+    prefer-ip-address: true
+debug: true

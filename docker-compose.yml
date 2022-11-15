@@ -1,0 +1,7 @@
+version: "3"
+services:
+  gateway:
+    image: zeromaxinc/gateway:latest
+    ports:
+      - 8000:8000
+
